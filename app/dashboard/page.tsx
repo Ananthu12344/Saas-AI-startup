@@ -93,7 +93,7 @@ export default async function DashboardPage() {
         <div className="page-width dashboard-shell">
           <header className="dashboard-header">
             <Link href="/" className="dashboard-back">
-              ← Clarity AI
+              ← TokenLens
             </Link>
             <a href="/logout" className="dashboard-logout">
               Log out
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
         <header className="dashboard-header">
           <div>
             <Link href="/" className="dashboard-back">
-              ← Clarity AI
+              ← TokenLens
             </Link>
             <p className="eyebrow">Workspace observatory</p>
             <h1>{data.workspace.name}</h1>

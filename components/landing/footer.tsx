@@ -25,11 +25,11 @@ export function Footer() {
             <span className="logo-mark">
               <Sparkles size={19} />
             </span>
-            Clarity<span className="brand-ai">AI</span>
+            TokenLens
           </Link>
           <p>
-            A little less busy.
-            <br />A little more brilliant.
+            Track AI usage.
+            <br />Understand your spend.
           </p>
           <div
             className="social-icons"
@@ -76,9 +76,9 @@ export function Footer() {
       </div>
       <div className="footer-bottom">
         <span>
-          © {new Date().getFullYear()} Clarity AI. All rights reserved.
+          © {new Date().getFullYear()} TokenLens. All rights reserved.
         </span>
-        <span>A little clarity changes everything.</span>
+        <span>See your AI usage. Understand your spend.</span>
       </div>
     </footer>
   )

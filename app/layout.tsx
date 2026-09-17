@@ -13,9 +13,26 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Clarity AI — Your best work, minus the busywork",
+  applicationName: "TokenLens",
+  title: {
+    default: "TokenLens — See your AI usage. Understand your spend.",
+    template: "%s | TokenLens",
+  },
   description:
-    "An AI workspace for writing, thinking, and moving work forward. Find your flow with Clarity AI.",
+    "Track AI usage, monitor costs, and understand spending across your connected providers.",
+  openGraph: {
+    title: "TokenLens — See your AI usage. Understand your spend.",
+    description:
+      "Track AI usage, monitor costs, and understand spending across your connected providers.",
+    siteName: "TokenLens",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TokenLens — See your AI usage. Understand your spend.",
+    description:
+      "Track AI usage, monitor costs, and understand spending across your connected providers.",
+  },
 }
 
 export default function RootLayout({

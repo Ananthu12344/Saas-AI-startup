@@ -16,16 +16,16 @@ export function Hero() {
     <section className="hero page-width">
       <div className="hero-copy">
         <div className="eyebrow">
-          <span className="status-dot" /> A little AI. A lot more clarity.
+          <span className="status-dot" /> Track AI usage. Understand your spend.
         </div>
         <h1>
-          Your best work.
+          See your AI usage.
           <br />
-          <span>Minus the busywork.</span>
+          <span>Understand your spend.</span>
         </h1>
         <p>
-          Turn scattered ideas into something brilliant. Your AI workspace for
-          writing, thinking, and moving work forward.
+          Track AI usage, monitor costs, and understand spending across your
+          connected providers.
         </p>
         <div className="hero-buttons">
           <Link href="/signup" className="primary-button">
@@ -46,7 +46,7 @@ export function Hero() {
       </div>
       <div
         className="hero-art"
-        aria-label="Illustrative Clarity workspace preview"
+        aria-label="Illustrative TokenLens workspace preview"
       >
         <div className="workspace">
           <div className="workspace-top">
@@ -55,7 +55,7 @@ export function Hero() {
               <i />
               <i />
             </span>
-            <span>clarity / your workspace</span>
+            <span>tokenlens / your workspace</span>
             <Command size={13} />
           </div>
           <div className="workspace-body">

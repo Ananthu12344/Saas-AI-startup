@@ -5,7 +5,7 @@ const plans = [
     name: "Free",
     price: "$0",
     period: "/ forever",
-    description: "A little clarity for your everyday.",
+    description: "A clear view of AI usage for your everyday work.",
     features: [
       "Essential writing & summaries",
       "Personal workspace",

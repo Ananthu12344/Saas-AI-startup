@@ -16,11 +16,11 @@ export async function Header() {
   return (
     <header className="site-header">
       <div className="page-width header-inner">
-        <Link href="/" className="brand" aria-label="Clarity AI home">
+        <Link href="/" className="brand" aria-label="TokenLens home">
           <span className="logo-mark">
             <Sparkles size={19} />
           </span>
-          Clarity<span className="brand-ai">AI</span>
+          TokenLens
         </Link>
         <nav aria-label="Main navigation" className="desktop-nav">
           <Link href="/#features">Features</Link>

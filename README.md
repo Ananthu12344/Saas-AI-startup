@@ -1,6 +1,6 @@
-# Clarity AI
+# TokenLens
 
-A responsive marketing site with Supabase email/password authentication, built with Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS 4.
+TokenLens helps teams see their AI usage and understand their spend. It is a responsive marketing site with Supabase email/password authentication, built with Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS 4.
 
 ## Development
 

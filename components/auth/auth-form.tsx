@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button"
 const copy = {
   login: {
     title: "Welcome back.",
-    description: "A little clarity. A lot more possibility.",
+    description:
+      "Track AI usage, monitor costs, and understand spending across your connected providers.",
     button: "Sign in",
   },
   signup: {
     title: "Make room for better work.",
-    description: "Start your free Clarity AI account.",
+    description: "Start your free TokenLens account.",
     button: "Create account",
   },
   forgot: {
@@ -125,7 +126,7 @@ export function AuthForm({
           <span className="logo-mark">
             <Sparkles size={19} />
           </span>
-          Clarity<span className="font-normal text-muted-foreground">AI</span>
+          TokenLens
         </Link>
         <h1>{content.title}</h1>
         <p>{content.description}</p>
@@ -226,7 +227,7 @@ export function AuthForm({
             </>
           ) : mode === "login" ? (
             <>
-              New to Clarity?{" "}
+              New to TokenLens?{" "}
               <Link className="text-link" href="/signup">
                 Create an account
               </Link>
