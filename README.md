@@ -10,7 +10,12 @@ Run the deterministic checks with:
 npm run test:unit
 npm run lint
 npm run typecheck
+npm run build:webpack
 ```
+
+`npm run build` uses the default Next.js Turbopack build. If the local
+environment blocks Turbopack worker startup, `npm run build:webpack` runs the
+same production compilation through Next.js Webpack.
 
 With the disposable Colima-backed Supabase stack running, run the local
 database and application integration checks with `npm run test:local`. These
