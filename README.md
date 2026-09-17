@@ -49,7 +49,7 @@ The browser/server client and cookie refresh patterns follow [Supabase's officia
 
 ## Structure
 
-- `components/landing/`: sticky header, workspace illustration, six features, pricing, footer.
+- `components/landing/`: sticky header, observatory preview, six product features, pricing, footer.
 - `components/auth/auth-form.tsx`: shared login, signup, recovery, and password forms.
 - `lib/supabase/`: browser/server clients and session refresh.
 - `lib/dashboard/queries.ts`: server-only, RLS-scoped dashboard reads.
@@ -58,7 +58,7 @@ The browser/server client and cookie refresh patterns follow [Supabase's officia
 - `app/auth/callback/route.ts`: exchanges a PKCE code and allows only home or password-reset destinations.
 - `app/globals.css`: responsive landing and auth styles.
 
-Pricing and workspace artwork are product previews; billing and AI generation are not implemented.
+Pricing and observatory artwork are product previews; billing and AI generation are not implemented.
 
 The local-only `supabase/seed.sql` fixture creates Acme AI and Beta Labs with representative projects, applications, usage, budgets, and heuristic findings. It runs automatically after `supabase db reset`; it is never applied to the hosted project. The dashboard currently selects the first workspace visible to the authenticated user; workspace switching will be added after the first vertical slice is stable.
 

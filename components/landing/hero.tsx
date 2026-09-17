@@ -29,7 +29,7 @@ export function Hero() {
         </p>
         <div className="hero-buttons">
           <Link href="/signup" className="primary-button">
-            Find your flow — it’s free <ArrowRight size={17} />
+            Explore your observatory — it’s free <ArrowRight size={17} />
           </Link>
           <Link href="#how-it-works" className="quiet-button">
             See how it works <ArrowUpRight size={16} />
@@ -69,21 +69,21 @@ export function Hero() {
               <Plus size={17} />
             </aside>
             <div className="workspace-main">
-              <div className="workspace-greeting">YOUR SPACE TO THINK</div>
+              <div className="workspace-greeting">YOUR AI OBSERVATORY</div>
               <h2>
-                Good morning, Alex <span>✳</span>
+                Usage at a glance <span>✳</span>
               </h2>
-              <p>What will you create today?</p>
+              <p>See what your connected providers are costing.</p>
               <div className="prompt-card">
                 <Sparkles size={17} />
-                <span>Turn my ideas into a launch plan</span>
+                <span>Spend this month · $1,284.60</span>
                 <span className="prompt-send">
                   <ArrowUpRight size={15} />
                 </span>
               </div>
               <div className="preview-tabs">
-                <span className="active">Your projects</span>
-                <span>Recent activity</span>
+                <span className="active">Cost by provider</span>
+                <span>Usage over time</span>
                 <Plus size={13} />
               </div>
               <div className="preview-projects">
@@ -91,31 +91,31 @@ export function Hero() {
                   <span className="project-icon lavender">
                     <FileText size={18} />
                   </span>
-                  <strong>Something worth sharing</strong>
-                  <small>Blog draft · Just now</small>
+                  <strong>OpenAI</strong>
+                  <small>$842.10 · 65.6%</small>
                   <div className="preview-lines">
                     <i />
                     <i />
                     <i />
                   </div>
-                  <span className="project-tag">Writing</span>
+                  <span className="project-tag">Provider</span>
                 </div>
                 <div>
                   <span className="project-icon peach">
                     <Sparkles size={18} />
                   </span>
-                  <strong>The next big idea</strong>
-                  <small>Launch plan · 2 hours ago</small>
+                  <strong>Anthropic</strong>
+                  <small>$442.50 · 34.4%</small>
                   <div className="preview-lines">
                     <i />
                     <i />
                     <i />
                   </div>
-                  <span className="project-tag">Planning</span>
+                  <span className="project-tag">Provider</span>
                 </div>
               </div>
               <div className="workspace-bottom">
-                <span className="status-dot" /> All your ideas, in a good place.
+                <span className="status-dot" /> One clear view across your providers.
               </div>
             </div>
           </div>
@@ -125,13 +125,13 @@ export function Hero() {
             <Check size={19} />
           </span>
           <div>
-            <strong>From blank page to done.</strong>
-            <span>A little momentum goes a long way.</span>
+            <strong>Find the signal.</strong>
+            <span>Usage, cost, and anomalies in one place.</span>
           </div>
           <Sparkles size={18} />
         </div>
         <span className="preview-caption">
-          A glimpse of your next workspace · Product concept
+          A glimpse of your usage observatory · Illustrative preview
         </span>
       </div>
     </section>

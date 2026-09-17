@@ -27,6 +27,7 @@ test("user-facing branding uses TokenLens and the approved messaging", async () 
     /Track AI usage, monitor costs, and understand spending across your connected providers\./
   )
   assert.doesNotMatch(combined, /Clarity AI/)
+  assert.doesNotMatch(combined, /Find the right words|From blank page to done\./)
 })
 
 test("credential configuration identifiers remain compatible", async () => {

@@ -7,9 +7,9 @@ const plans = [
     period: "/ forever",
     description: "A clear view of AI usage for your everyday work.",
     features: [
-      "Essential writing & summaries",
-      "Personal workspace",
-      "Saved prompts",
+      "Usage and token overview",
+      "One workspace",
+      "Provider and model breakdowns",
       "Community support",
     ],
     cta: "Start for free",
@@ -18,12 +18,12 @@ const plans = [
     name: "Pro",
     price: "$19",
     period: "/ month",
-    description: "More space for your biggest ideas.",
+    description: "More visibility for growing AI usage.",
     features: [
       "Everything in Free",
-      "Expanded AI usage",
-      "Advanced planning workflows",
-      "Shared projects",
+      "Project and application attribution",
+      "Budget consumption visibility",
+      "Potential inefficiency signals",
       "Priority support",
     ],
     cta: "Get started with Pro",
@@ -33,12 +33,12 @@ const plans = [
     name: "Enterprise",
     price: "Let’s talk",
     period: "",
-    description: "A clearer way forward for your team.",
+    description: "A clearer way to govern team usage.",
     features: [
       "Everything in Pro",
-      "Organization workspaces",
-      "Team administration",
-      "Personalized onboarding",
+      "Workspace membership controls",
+      "Server-managed provider credentials",
+      "Usage ingestion workflows",
       "Dedicated support",
     ],
     cta: "Register your interest",
@@ -50,8 +50,8 @@ export function Pricing() {
       <div className="page-width">
         <div className="section-heading">
           <span className="eyebrow">ROOM TO GROW</span>
-          <h2>A plan for your kind of progress.</h2>
-          <p>Start small. Think big. Find the space that fits.</p>
+          <h2>A plan for your stage of usage.</h2>
+          <p>Start with visibility. Add control as your AI usage grows.</p>
         </div>
         <div className="pricing-grid">
           {plans.map((plan) => (

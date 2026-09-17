@@ -1,47 +1,47 @@
 import {
-  PenLine,
-  AlignLeft,
-  ListChecks,
-  Bookmark,
-  Users,
-  FolderOpen,
+  BarChart3,
+  Boxes,
+  CircleDollarSign,
+  Gauge,
+  ShieldCheck,
+  TriangleAlert,
 } from "lucide-react"
 const features = [
   {
-    icon: PenLine,
-    title: "Find the right words",
+    icon: BarChart3,
+    title: "See usage at a glance",
     description:
-      "From first drafts to final polish, give your ideas a voice that sounds like you.",
+      "Track tokens, requests, and spend over time from one workspace observatory.",
   },
   {
-    icon: AlignLeft,
-    title: "Get to the good part",
+    icon: CircleDollarSign,
+    title: "Understand provider cost",
     description:
-      "Turn long documents and scattered notes into clear, useful takeaways.",
+      "Compare cost across connected providers and models with clear USD estimates.",
   },
   {
-    icon: ListChecks,
-    title: "Make a plan. Make progress.",
+    icon: Boxes,
+    title: "Attribute every project",
     description:
-      "Break your next big idea into small, achievable steps. Know what comes next.",
+      "Connect usage to projects and applications so teams can see where spend comes from.",
   },
   {
-    icon: Bookmark,
-    title: "Keep what works",
+    icon: Gauge,
+    title: "Keep budgets visible",
     description:
-      "Save your favorite prompts and repeat your best workflows without starting over.",
+      "Monitor active budget periods, remaining allowance, and threshold status.",
   },
   {
-    icon: Users,
-    title: "Better, together",
+    icon: TriangleAlert,
+    title: "Investigate unusual usage",
     description:
-      "Bring your team’s thinking into one shared space. Build on each other’s ideas.",
+      "Review explainable potential inefficiencies and daily cost anomalies before they grow.",
   },
   {
-    icon: FolderOpen,
-    title: "A place for every idea",
+    icon: ShieldCheck,
+    title: "Protect provider access",
     description:
-      "Keep drafts, notes, and projects organized, so your next great thought never gets lost.",
+      "Keep provider credentials server-side and scope every workspace record with RLS.",
   },
 ]
 export function Features() {
@@ -50,10 +50,10 @@ export function Features() {
       <section id="features" className="features-section">
         <div className="page-width">
           <div className="section-heading">
-            <span className="eyebrow">LESS FRICTION. MORE POSSIBILITY.</span>
-            <h2>One workspace. A clearer mind.</h2>
+            <span className="eyebrow">ONE VIEW. BETTER DECISIONS.</span>
+            <h2>Your AI usage, made understandable.</h2>
             <p>
-              Everything you need to go from “what if” to “look what I made.”
+              The signals your team needs to manage usage and spending across AI providers.
             </p>
           </div>
           <div className="feature-grid">
@@ -71,27 +71,27 @@ export function Features() {
       </section>
       <section id="how-it-works" className="how-section page-width">
         <div>
-          <span className="eyebrow">YOUR NEXT GOOD IDEA STARTS HERE</span>
+          <span className="eyebrow">FROM DATA TO ACTION</span>
           <h2>
-            Less setup.
+            Connect the dots.
             <br />
-            More doing.
+            Make a better call.
           </h2>
           <LinkButton />
         </div>
         <ol>
           {[
             [
-              "Bring your idea",
-              "A rough note, a blank page, a big question. Start wherever you are.",
+              "Connect a provider",
+              "Add a server-managed provider connection when you are ready to collect usage.",
             ],
             [
-              "Find your flow",
-              "Write, explore, and make a plan with a little help from AI.",
+              "Normalize usage",
+              "Bring provider-specific events into one consistent view of tokens and cost.",
             ],
             [
-              "Make it yours",
-              "Refine the details, bring in your team, and move your work forward.",
+              "Act on the signal",
+              "Use attribution, budgets, and explainable findings to decide what to investigate next.",
             ],
           ].map(([title, text], index) => (
             <li key={title}>
