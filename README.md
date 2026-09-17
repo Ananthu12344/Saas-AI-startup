@@ -53,6 +53,7 @@ The browser/server client and cookie refresh patterns follow [Supabase's officia
 - `components/auth/auth-form.tsx`: shared login, signup, recovery, and password forms.
 - `lib/supabase/`: browser/server clients and session refresh.
 - `lib/dashboard/queries.ts`: server-only, RLS-scoped dashboard reads.
+- `lib/dashboard/budgets.ts`: explainable budget threshold states.
 - `app/dashboard/page.tsx`: first dashboard slice backed by Supabase views.
 - `app/auth/callback/route.ts`: exchanges a PKCE code and allows only home or password-reset destinations.
 - `app/globals.css`: responsive landing and auth styles.
@@ -79,7 +80,11 @@ Provider-specific behavior belongs under `lib/providers/`. The first adapter bou
 
 The MVP telemetry choice is provider usage polling. It keeps onboarding and infrastructure simple, but freshness and project/request attribution depend on each provider's usage API; it is not real-time. A gateway and SDK can be added later using the same `ProviderAdapter` and normalized event boundary. The trusted ingestion boundary is `lib/ingestion/ingest.ts`: it resolves enabled providers, validates normalized records, strips sensitive metadata, and uses the database idempotency constraint for safe retries. It must never run in browser code or receive raw provider credentials from a client.
 
-`lib/ingestion/sync.ts` handles the shared polling mechanics: credential validation, cursor pagination, checkpoint advancement only after a successful page write, and a hard page limit. The OpenAI HTTP response parser and credential-manager integration remain separate provider work; this boundary intentionally does not guess a provider API contract.
+`lib/ingestion/sync.ts` handles the shared polling mechanics: credential validation, cursor pagination, checkpoint advancement only after a successful page write, and a hard page limit. `lib/ingestion/checkpoints.ts` persists cursors by workspace/provider/credential, while `lib/ingestion/run.ts` composes checkpoints, pricing, and ingestion for a trusted worker.
+
+`lib/providers/http.ts` provides same-origin HTTPS JSON transport without logging keys. `lib/providers/credentials.ts` reads isolated ciphertext only through an injected server-side decryptor, and `lib/providers/validation.ts` rejects malformed normalized pages before ingestion. The OpenAI HTTP response parser remains separate provider work; this boundary intentionally does not guess a provider API contract.
+
+`lib/usage/pricing-repository.ts` loads effective-dated model pricing from Supabase. Historical cost calculation still requires an approved provider pricing catalog and a protected key-management implementation in the worker environment.
 
 The migration has been validated against a disposable local Supabase database and remains unapplied to the remote project. Before deployment, validate its RLS policies with two authenticated workspaces, verify that ordinary clients cannot insert usage or read credential secrets, and review the migration against an isolated Supabase environment.
 
