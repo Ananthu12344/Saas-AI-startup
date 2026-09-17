@@ -252,11 +252,31 @@ for each row execute function public.validate_workspace_links();
 create or replace function public.prevent_last_owner_removal()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if old.role = 'owner' and (tg_op = 'DELETE' or new.role <> 'owner') and not exists (
-    select 1 from public.workspace_members
-    where workspace_id = old.workspace_id and role = 'owner' and user_id <> old.user_id
+  if tg_op = 'UPDATE' and (
+    new.workspace_id is distinct from old.workspace_id
+    or new.user_id is distinct from old.user_id
   ) then
-    raise exception 'a workspace must retain at least one owner';
+    raise exception 'membership identity cannot be changed';
+  end if;
+  if old.role = 'owner' and (tg_op = 'DELETE' or new.role <> 'owner') then
+    -- A shared row write serializes removals and causes a serialization failure
+    -- for stale REPEATABLE READ snapshots. A lock without a write is insufficient.
+    update public.workspaces set name = name where id = old.workspace_id;
+    -- A trusted workspace deletion may cascade memberships after the parent
+    -- is gone. Only retained workspaces must retain an owner.
+    if found then
+      if not exists (
+        select 1 from public.workspace_members
+        where workspace_id = old.workspace_id and role = 'owner' and user_id <> old.user_id
+      ) then
+        raise exception 'a workspace must retain at least one owner';
+      end if;
+      -- Recheck after waiting, in case the caller's ownership was revoked.
+      if current_setting('role') in ('authenticated', 'anon')
+        and not public.is_workspace_owner(old.workspace_id) then
+        raise exception 'only owners may remove ownership' using errcode = '42501';
+      end if;
+    end if;
   end if;
   if tg_op = 'DELETE' then return old; end if;
   return new;
@@ -287,11 +307,15 @@ create policy "admins can add non-owner membership" on public.workspace_members 
   with check (public.is_workspace_admin(workspace_id)
     and (role in ('member', 'viewer') or public.is_workspace_owner(workspace_id)));
 create policy "admins can update non-owner membership" on public.workspace_members for update
-  using (public.is_workspace_admin(workspace_id))
+  using (public.is_workspace_admin(workspace_id)
+    and (role <> 'owner' or public.is_workspace_owner(workspace_id)))
   with check (public.is_workspace_admin(workspace_id)
     and (role in ('member', 'viewer') or public.is_workspace_owner(workspace_id)));
-create policy "admins can remove membership" on public.workspace_members for delete using (public.is_workspace_admin(workspace_id));
-create policy "workspace creators can add themselves" on public.workspace_members for insert with check (user_id = auth.uid() and exists (select 1 from public.workspaces w where w.id = workspace_id and w.created_by = auth.uid()));
+create policy "admins can remove membership" on public.workspace_members for delete
+  using (public.is_workspace_admin(workspace_id)
+    and (role <> 'owner' or public.is_workspace_owner(workspace_id)));
+-- Initial ownership is assigned only by add_workspace_owner(), never by a
+-- creator-based browser policy (created_by is not an authorization boundary).
 create policy "authenticated users can view providers" on public.ai_providers for select to authenticated using (enabled);
 create policy "authenticated users can view enabled models" on public.provider_models for select to authenticated using (enabled);
 create policy "authenticated users can view model pricing" on public.model_pricing_versions for select to authenticated using (true);
