@@ -59,7 +59,7 @@ function Breakdown({
                 <th scope="col">Cost</th>
                 <th scope="col">Share</th>
                 <th scope="col">Tokens</th>
-                <th scope="col">Requests</th>
+                <th scope="col">Events</th>
               </tr>
             </thead>
             <tbody>
@@ -156,7 +156,8 @@ export default async function DashboardPage() {
             <h1>{data.workspace.name}</h1>
             <p className="dashboard-subtitle">
               USD usage costs may include estimates. Summary periods use UTC;
-              breakdowns cover all recorded usage.
+              breakdowns cover all recorded usage events. Event counts are
+              normalized ingestion records and may represent provider buckets.
             </p>
           </div>
           <a href="/logout" className="dashboard-logout">
@@ -207,7 +208,7 @@ export default async function DashboardPage() {
                     <th scope="col">Day</th>
                     <th scope="col">Cost</th>
                     <th scope="col">Tokens</th>
-                    <th scope="col">Requests</th>
+                    <th scope="col">Events</th>
                   </tr>
                 </thead>
                 <tbody>

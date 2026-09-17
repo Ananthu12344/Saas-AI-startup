@@ -280,6 +280,8 @@ async function check(label, fn) {
             const html = await dashboardHtml()
             for (const event of events) assert.ok(html.includes(event.model))
             assert.ok(html.includes("All time"))
+            assert.ok(html.includes("Events"))
+            assert.ok(!html.includes(">Requests<"))
             assert.ok(html.includes("1,031.64") || html.includes("1031.64"))
           }
         )
