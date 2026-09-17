@@ -4,7 +4,7 @@ import { OpenAIAdapter } from "../../lib/providers/openai.ts"
 
 test("OpenAI adapter exposes only declared telemetry capabilities", () => {
   const adapter = new OpenAIAdapter(
-    async () => ({ records: [], windowEnd: "end" }),
+    async () => ({ records: [], windowEnd: "2026-09-17T13:00:00Z" }),
     async () => undefined
   )
   assert.equal(adapter.provider, "openai")
@@ -19,7 +19,7 @@ test("validates credentials before polling and forwards the cursor", async () =>
   const adapter = new OpenAIAdapter(
     async (window) => {
       requested = window
-      return { records: [], windowEnd: window.end }
+      return { records: [], windowEnd: "2026-09-17T13:00:00Z" }
     },
     async () => {
       validated = true
@@ -33,7 +33,7 @@ test("validates credentials before polling and forwards the cursor", async () =>
 
 test("normalizes provider request IDs into stable ingestion keys", () => {
   const adapter = new OpenAIAdapter(
-    async () => ({ records: [], windowEnd: "end" }),
+    async () => ({ records: [], windowEnd: "2026-09-17T13:00:00Z" }),
     async () => undefined
   )
   const withRequestId = adapter.normalizeUsage({
@@ -59,7 +59,7 @@ test("normalizes provider request IDs into stable ingestion keys", () => {
 
 test("preserves provider costs and optional telemetry", () => {
   const adapter = new OpenAIAdapter(
-    async () => ({ records: [], windowEnd: "end" }),
+    async () => ({ records: [], windowEnd: "2026-09-17T13:00:00Z" }),
     async () => undefined
   )
   const normalized = adapter.normalizeUsage({

@@ -5,6 +5,7 @@ import type {
   ProviderUsageRecord,
   UsageWindow,
 } from "./types"
+import { validateProviderUsagePage } from "./validation.ts"
 
 /**
  * OpenAI-specific behavior lives behind this boundary. Network transport and
@@ -44,7 +45,7 @@ export class OpenAIAdapter implements ProviderAdapter {
   }
 
   fetchUsage(window: UsageWindow) {
-    return this.fetchPage(window, window.cursor)
+    return this.fetchPage(window, window.cursor).then(validateProviderUsagePage)
   }
 
   normalizeUsage(record: ProviderUsageRecord): NormalizedUsageEvent {
