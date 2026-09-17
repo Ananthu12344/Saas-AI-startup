@@ -24,17 +24,18 @@ const workspaceId = "10000000-0000-0000-0000-0000000000a1"
 const runId = "openai-vertical-" + randomUUID()
 const credentialId = randomUUID()
 const providerModelId = randomUUID()
+const testModel = "gpt-4o-mini-test-" + randomUUID().slice(0, 8)
 const records = [
   {
     providerRequestId: runId + "-1",
-    model: "gpt-4o-mini",
+    model: testModel,
     occurredAt: "2026-09-17T10:00:00Z",
     inputTokens: 1_000_000,
     outputTokens: 100_000,
   },
   {
     providerRequestId: runId + "-2",
-    model: "gpt-4o-mini",
+    model: testModel,
     occurredAt: "2026-09-17T11:00:00Z",
     inputTokens: 500_000,
     outputTokens: 50_000,
@@ -72,7 +73,7 @@ assert.equal(credentialError, null)
 const { error: modelError } = await supabase.from("provider_models").insert({
   id: providerModelId,
   provider_id: provider.id,
-  provider_model: "gpt-4o-mini",
+  provider_model: testModel,
   display_name: "Local GPT-4o mini",
 })
 assert.equal(modelError, null)
@@ -87,7 +88,7 @@ const { error: pricingError } = await supabase
     source: "local-test",
   })
 assert.equal(pricingError, null)
-const pricing = await loadPricingVersions(supabase, "openai", "gpt-4o-mini")
+const pricing = await loadPricingVersions(supabase, "openai", testModel)
 assert.equal(pricing.length, 1)
 const context = { workspaceId, environment: "development" }
 
@@ -100,7 +101,7 @@ try {
     credentialId,
     context,
     window: { start: "2026-09-17T00:00:00Z", end: "2026-09-18T00:00:00Z" },
-    pricingByModel: { "gpt-4o-mini": pricing },
+    pricingByModel: { [testModel]: pricing },
   }
   const first = await runProviderSync(syncOptions)
   const replay = await runProviderSync(syncOptions)
@@ -126,7 +127,7 @@ try {
     .from("usage_cost_by_model")
     .select("total_cost,total_tokens")
     .eq("workspace_id", workspaceId)
-    .eq("model", "gpt-4o-mini")
+    .eq("model", testModel)
   assert.equal(aggregateError, null)
   assert.ok(
     aggregate.some(

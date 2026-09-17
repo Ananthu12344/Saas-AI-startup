@@ -39,6 +39,33 @@ values
   ('50000000-0000-0000-0000-0000000000b1', '10000000-0000-0000-0000-0000000000b1', 'workspace', 'September AI budget', 20, '2026-09-01T00:00:00Z', '2026-10-01T00:00:00Z', 0.8)
 on conflict (id) do nothing;
 
+-- Local-only model catalog and illustrative pricing fixtures. These values are
+-- for development data shape validation, not production billing rates.
+insert into public.provider_models (id, provider_id, provider_model, display_name)
+select '40000000-0000-0000-0000-000000000001'::uuid, id, 'gpt-4o-mini', 'GPT-4o mini'
+from public.ai_providers where slug = 'openai'
+on conflict (id) do nothing;
+
+insert into public.provider_models (id, provider_id, provider_model, display_name)
+select '40000000-0000-0000-0000-000000000002'::uuid, id, 'gpt-4o', 'GPT-4o'
+from public.ai_providers where slug = 'openai'
+on conflict (id) do nothing;
+
+insert into public.provider_models (id, provider_id, provider_model, display_name)
+select '40000000-0000-0000-0000-000000000003'::uuid, id, 'claude-3-5-sonnet', 'Claude 3.5 Sonnet'
+from public.ai_providers where slug = 'anthropic'
+on conflict (id) do nothing;
+
+insert into public.model_pricing_versions (
+  provider_model_id, effective_from, currency, input_cost_per_million,
+  output_cost_per_million, source
+)
+values
+  ('40000000-0000-0000-0000-000000000001', '2026-01-01T00:00:00Z', 'USD', 2, 8, 'local-fixture'),
+  ('40000000-0000-0000-0000-000000000002', '2026-01-01T00:00:00Z', 'USD', 5, 15, 'local-fixture'),
+  ('40000000-0000-0000-0000-000000000003', '2026-01-01T00:00:00Z', 'USD', 3, 15, 'local-fixture')
+on conflict do nothing;
+
 insert into public.usage_events (
   id, workspace_id, project_id, application_id, provider_id, user_id, model,
   input_tokens, output_tokens, cached_input_tokens, reasoning_tokens, cost,
