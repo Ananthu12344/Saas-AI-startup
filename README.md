@@ -59,6 +59,8 @@ Dashboard queries can read the security-invoker views `usage_daily`, `usage_cost
 
 Provider-specific behavior belongs under `lib/providers/`. The first adapter boundary is `ProviderAdapter`; `OpenAIAdapter` normalizes provider records without exposing transport or credentials to client components. Shared normalization lives in `lib/usage/normalize.ts`, and deterministic token-price arithmetic lives in `lib/usage/cost.ts`. Provider polling should run from a trusted server or Edge Function and write immutable events with an idempotency key.
 
+The MVP telemetry choice is provider usage polling. It keeps onboarding and infrastructure simple, but freshness and project/request attribution depend on each provider's usage API; it is not real-time. A gateway and SDK can be added later using the same `ProviderAdapter` and normalized event boundary. The trusted ingestion boundary is `lib/ingestion/ingest.ts`: it resolves enabled providers, validates normalized records, strips sensitive metadata, and uses the database idempotency constraint for safe retries. It must never run in browser code or receive raw provider credentials from a client.
+
 The migration has been validated against a disposable local Supabase database and remains unapplied to the remote project. Before deployment, validate its RLS policies with two authenticated workspaces, verify that ordinary clients cannot insert usage or read credential secrets, and review the migration against an isolated Supabase environment.
 
 Membership authorization keeps owner changes owner-only, makes `workspace_id` and `user_id` immutable, removes the redundant creator self-insert policy, and serializes owner removal through the workspace row. A retained workspace must always keep one owner; trusted workspace deletion may still cascade memberships.
@@ -74,6 +76,8 @@ npx supabase test db
 ```
 
 The membership suite includes owner/admin/member authorization and isolation checks. `node tests/integration/membership-concurrency.local.cjs` runs two-session owner-removal and demotion races at READ COMMITTED and REPEATABLE READ against the disposable local database.
+
+`node tests/integration/ingestion.local.mjs` verifies the local trusted ingestion path, duplicate replay behavior, and metadata minimization. It uses temporary local data and removes it when complete.
 
 The `api_credential_secrets` table stores only a reference and, when used, application-encrypted ciphertext. Encryption keys must remain outside PostgreSQL in a server-only secret manager or protected runtime configuration. Browser roles have no table privileges, and provider credentials must never be returned to client components, logged, or placed in `NEXT_PUBLIC_*` variables.
 
