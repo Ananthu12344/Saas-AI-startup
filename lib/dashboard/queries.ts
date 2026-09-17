@@ -62,6 +62,7 @@ export type DashboardData = {
       spent: number
       remaining: number
       consumed_ratio: number | null
+      alert_threshold: number
     }
   >
   waste: Array<

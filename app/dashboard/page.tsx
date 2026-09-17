@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { dashboardSummary } from "@/lib/dashboard/summary"
 import { getDashboardData } from "@/lib/dashboard/queries"
+import { budgetState, budgetStateLabel } from "@/lib/dashboard/budgets"
 
 const money = (value: number) => `$${value.toFixed(2)}`
 const integer = (value: number) => new Intl.NumberFormat("en-US").format(value)
@@ -263,6 +264,14 @@ export default async function DashboardPage() {
                         : `${(budget.consumed_ratio * 100).toFixed(1)}% used`}{" "}
                       · {day(budget.period_start.slice(0, 10))} to{" "}
                       {day(budget.period_end.slice(0, 10))} (end exclusive)
+                    </span>
+                    <span>
+                      {budgetStateLabel(
+                        budgetState(
+                          budget.consumed_ratio,
+                          budget.alert_threshold
+                        )
+                      )}
                     </span>
                     <progress
                       max="1"
