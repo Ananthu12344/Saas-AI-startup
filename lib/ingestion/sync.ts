@@ -14,6 +14,9 @@ export type SyncDependencies = {
     events: ReturnType<ProviderAdapter["normalizeUsage"]>[],
     context: IngestionContext
   ) => Promise<{ inserted: number }>
+  priceEvent?: (
+    event: ReturnType<ProviderAdapter["normalizeUsage"]>
+  ) => ReturnType<ProviderAdapter["normalizeUsage"]>
 }
 
 export async function syncProviderUsage(
@@ -26,7 +29,10 @@ export async function syncProviderUsage(
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 1000)
     throw new Error("Invalid sync page limit")
   const checkpoint = await dependencies.loadCheckpoint()
-  let cursor = checkpoint?.cursor ?? undefined
+  const sameWindow =
+    checkpoint?.windowStart === window.start &&
+    checkpoint?.windowEnd === window.end
+  let cursor = sameWindow ? (checkpoint?.cursor ?? undefined) : undefined
   let pages = 0
   let events = 0
   let inserted = 0
@@ -37,9 +43,12 @@ export async function syncProviderUsage(
     const normalized = page.records.map((record) =>
       adapter.normalizeUsage(record)
     )
-    const result = await dependencies.ingestPage(normalized, context)
+    const priced = dependencies.priceEvent
+      ? normalized.map((event) => dependencies.priceEvent?.(event) ?? event)
+      : normalized
+    const result = await dependencies.ingestPage(priced, context)
     pages += 1
-    events += normalized.length
+    events += priced.length
     inserted += result.inserted
     cursor = page.nextCursor
     await dependencies.saveCheckpoint({

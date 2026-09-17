@@ -78,8 +78,8 @@ test("resumes from a saved cursor", async () => {
   const dependencies = deps()
   dependencies.checkpoints.push({
     cursor: "saved",
-    windowStart: "old",
-    windowEnd: "old",
+    windowStart: "2026-09-17T00:00:00Z",
+    windowEnd: "2026-09-18T00:00:00Z",
   })
   const result = await syncProviderUsage(
     adapter(pages),
@@ -88,6 +88,52 @@ test("resumes from a saved cursor", async () => {
     dependencies
   )
   assert.equal(result.events, 1)
+})
+
+test("does not reuse a cursor from another window", async () => {
+  const pages = {
+    first: { records: [record("new")], windowEnd: "2026-09-18T14:00:00Z" },
+    stale: { records: [record("stale")], windowEnd: "2026-09-18T14:00:00Z" },
+  }
+  const dependencies = deps()
+  dependencies.checkpoints.push({
+    cursor: "stale",
+    windowStart: "old",
+    windowEnd: "old",
+  })
+  const result = await syncProviderUsage(
+    adapter(pages),
+    context,
+    { start: "2026-09-18T00:00:00Z", end: "2026-09-19T00:00:00Z" },
+    dependencies
+  )
+  assert.equal(result.events, 1)
+  assert.equal(dependencies.checkpoints.at(-1).cursor, null)
+})
+
+test("applies pricing before ingestion when a pricing stage is supplied", async () => {
+  let received
+  const dependencies = {
+    ...deps(),
+    priceEvent: (value) => ({
+      ...value,
+      cost: 1.25,
+      currency: "USD",
+      costStatus: "estimated",
+    }),
+    ingestPage: async (events) => {
+      received = events
+      return { inserted: events.length }
+    },
+  }
+  await syncProviderUsage(
+    adapter({ first: { records: [record("priced")], windowEnd: "end" } }),
+    context,
+    { start: "start", end: "end" },
+    dependencies
+  )
+  assert.equal(received[0].cost, 1.25)
+  assert.equal(received[0].costStatus, "estimated")
 })
 
 test("does not advance a checkpoint when fetch or ingest fails", async () => {
