@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "for test_file in tests/unit/*.test.mjs; do node \"$test_file\" || exit 1; done",
+    "test:local": "node tests/integration/membership-concurrency.local.cjs && node tests/integration/ingestion.local.mjs && node tests/integration/dashboard.local.cjs && node tests/integration/openai-vertical.local.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

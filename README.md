@@ -4,6 +4,19 @@ A responsive marketing site with Supabase email/password authentication, built w
 
 ## Development
 
+Run the deterministic checks with:
+
+```bash
+npm run test:unit
+npm run lint
+npm run typecheck
+```
+
+With the disposable Colima-backed Supabase stack running, run the local
+database and application integration checks with `npm run test:local`. These
+tests create temporary local fixtures and remove them before exiting; they do
+not connect to the hosted Supabase project.
+
 ```bash
 npm install
 npm run dev
