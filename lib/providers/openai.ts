@@ -13,6 +13,11 @@ import type {
  */
 export class OpenAIAdapter implements ProviderAdapter {
   readonly provider = "openai" as const
+  private readonly fetchPage: (
+    window: UsageWindow,
+    cursor?: string
+  ) => Promise<ProviderUsagePage>
+  private readonly validate: () => Promise<void>
   readonly capabilities = {
     accountUsage: true,
     projectUsage: true,
@@ -24,12 +29,15 @@ export class OpenAIAdapter implements ProviderAdapter {
   }
 
   constructor(
-    private readonly fetchPage: (
+    fetchPage: (
       window: UsageWindow,
       cursor?: string
     ) => Promise<ProviderUsagePage>,
-    private readonly validate: () => Promise<void>
-  ) {}
+    validate: () => Promise<void>
+  ) {
+    this.fetchPage = fetchPage
+    this.validate = validate
+  }
 
   validateCredential() {
     return this.validate()
