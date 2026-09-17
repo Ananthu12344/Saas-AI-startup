@@ -7,6 +7,7 @@ import { createCheckpointStore } from "../../lib/ingestion/checkpoints.ts"
 import { ingestUsagePage } from "../../lib/ingestion/ingest.ts"
 import { syncProviderUsage } from "../../lib/ingestion/sync.ts"
 import { applyPricing, selectPricingVersion } from "../../lib/usage/pricing.ts"
+import { loadPricingVersions } from "../../lib/usage/pricing-repository.ts"
 
 const env = {
   ...process.env,
@@ -25,13 +26,7 @@ const supabase = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
 const workspaceId = "10000000-0000-0000-0000-0000000000a1"
 const runId = "openai-vertical-" + randomUUID()
 const credentialId = randomUUID()
-const pricing = {
-  providerModelId: "local-openai-model",
-  effectiveFrom: "2026-01-01T00:00:00Z",
-  currency: "USD",
-  inputCostPerMillion: 2,
-  outputCostPerMillion: 8,
-}
+const providerModelId = randomUUID()
 const records = [
   {
     providerRequestId: runId + "-1",
@@ -77,6 +72,26 @@ const { error: credentialError } = await supabase
     metadata: { purpose: "local-test" },
   })
 assert.equal(credentialError, null)
+const { error: modelError } = await supabase.from("provider_models").insert({
+  id: providerModelId,
+  provider_id: provider.id,
+  provider_model: "gpt-4o-mini",
+  display_name: "Local GPT-4o mini",
+})
+assert.equal(modelError, null)
+const { error: pricingError } = await supabase
+  .from("model_pricing_versions")
+  .insert({
+    provider_model_id: providerModelId,
+    effective_from: "2026-01-01T00:00:00Z",
+    currency: "USD",
+    input_cost_per_million: 2,
+    output_cost_per_million: 8,
+    source: "local-test",
+  })
+assert.equal(pricingError, null)
+const pricing = await loadPricingVersions(supabase, "openai", "gpt-4o-mini")
+assert.equal(pricing.length, 1)
 const context = { workspaceId, environment: "development" }
 const checkpointStore = createCheckpointStore(supabase, {
   workspaceId,
@@ -86,7 +101,7 @@ const checkpointStore = createCheckpointStore(supabase, {
 const dependencies = {
   ...checkpointStore,
   priceEvent: (event) =>
-    applyPricing(event, selectPricingVersion([pricing], event.occurredAt)),
+    applyPricing(event, selectPricingVersion(pricing, event.occurredAt)),
   ingestPage: (events, pageContext) =>
     ingestUsagePage(supabase, "openai", events, pageContext),
 }
@@ -149,4 +164,9 @@ try {
     .delete()
     .eq("credential_id", credentialId)
   await supabase.from("api_credentials").delete().eq("id", credentialId)
+  await supabase
+    .from("model_pricing_versions")
+    .delete()
+    .eq("provider_model_id", providerModelId)
+  await supabase.from("provider_models").delete().eq("id", providerModelId)
 }
