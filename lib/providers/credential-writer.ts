@@ -1,13 +1,5 @@
 import { encryptProviderCredential, type CredentialCryptoConfig } from "./crypto.ts"
-
-type CredentialSecretStore = {
-  from(table: string): {
-    upsert(
-      values: Record<string, unknown>,
-      options: { onConflict: string }
-    ): Promise<{ error: { message?: string } | null }>
-  }
-}
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 /**
  * Store a provider credential from a trusted server or worker only.
@@ -15,7 +7,7 @@ type CredentialSecretStore = {
  * returned or written to logs.
  */
 export async function writeProviderCredentialSecret(
-  supabase: CredentialSecretStore,
+  supabase: SupabaseClient,
   credentialId: string,
   secretRef: string,
   plaintext: string,

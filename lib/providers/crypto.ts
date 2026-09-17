@@ -86,7 +86,7 @@ export function createCredentialDecryptor(
 }
 
 /** Read only protected runtime configuration; never expose these values to clients. */
-export function createCredentialDecryptorFromEnv(
+export function credentialCryptoConfigFromEnv(
   env: NodeJS.ProcessEnv = process.env
 ) {
   const encodedKey = env.CLARITY_CREDENTIAL_MASTER_KEY
@@ -94,5 +94,13 @@ export function createCredentialDecryptorFromEnv(
   if (!encodedKey || !keyVersion)
     throw new Error("Credential encryption configuration is unavailable")
   const key = Buffer.from(encodedKey, "base64")
-  return createCredentialDecryptor({ key, keyVersion })
+  const config = { key, keyVersion }
+  validateConfig(config)
+  return config
+}
+
+export function createCredentialDecryptorFromEnv(
+  env: NodeJS.ProcessEnv = process.env
+) {
+  return createCredentialDecryptor(credentialCryptoConfigFromEnv(env))
 }
