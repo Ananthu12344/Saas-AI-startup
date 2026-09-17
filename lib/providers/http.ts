@@ -32,10 +32,13 @@ function validateBaseUrl(baseUrl: string) {
 export function createJsonFetcher(
   baseUrl: string,
   apiKey: string,
-  fetchImpl: FetchLike = fetch
+  fetchImpl: FetchLike = fetch,
+  timeoutMs = 15_000
 ): JsonFetch {
   const origin = validateBaseUrl(baseUrl)
   if (!apiKey) throw new Error("Provider API key is required")
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1)
+    throw new Error("Provider timeout must be a positive integer")
 
   return async (path, query = {}, signal) => {
     const url = new URL(path, origin)
@@ -43,6 +46,12 @@ export function createJsonFetcher(
       throw new Error("Provider request escaped the configured origin")
     for (const [key, value] of Object.entries(query))
       if (value !== undefined) url.searchParams.set(key, String(value))
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    const abortFromCaller = () => controller.abort()
+    if (signal?.aborted) controller.abort()
+    else signal?.addEventListener("abort", abortFromCaller, { once: true })
 
     let response: Response
     try {
@@ -52,10 +61,15 @@ export function createJsonFetcher(
           Accept: "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
-        signal,
+        signal: controller.signal,
       })
     } catch {
+      if (controller.signal.aborted && !signal?.aborted)
+        throw new ProviderTransportError("Provider request timed out", 408)
       throw new ProviderTransportError("Provider request failed", 0)
+    } finally {
+      clearTimeout(timeout)
+      signal?.removeEventListener("abort", abortFromCaller)
     }
 
     if (!response.ok)

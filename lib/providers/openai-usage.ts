@@ -38,6 +38,8 @@ export function parseOpenAICompletionsPage(
   const page = payload as Record<string, unknown>
   if (!Array.isArray(page.data))
     throw new OpenAIUsageParseError("OpenAI usage response is missing data")
+  if (typeof page.has_more !== "boolean")
+    throw new OpenAIUsageParseError("OpenAI usage response is missing has_more")
   if (
     page.next_page !== undefined &&
     page.next_page !== null &&
@@ -45,6 +47,14 @@ export function parseOpenAICompletionsPage(
   )
     throw new OpenAIUsageParseError(
       "OpenAI usage response has an invalid page cursor"
+    )
+  if (page.has_more && typeof page.next_page !== "string")
+    throw new OpenAIUsageParseError(
+      "OpenAI usage response is missing next_page for a paginated result"
+    )
+  if (!page.has_more && page.next_page !== undefined && page.next_page !== null)
+    throw new OpenAIUsageParseError(
+      "OpenAI usage response has a cursor without has_more"
     )
 
   const records = []
@@ -129,13 +139,15 @@ export type OpenAIAdapterOptions = {
   validateCredential: () => Promise<void>
   baseUrl?: string
   fetchImpl?: Parameters<typeof createJsonFetcher>[2]
+  timeoutMs?: number
 }
 
 export function createOpenAIAdapter(options: OpenAIAdapterOptions) {
   const fetchJson: JsonFetch = createJsonFetcher(
     options.baseUrl ?? "https://api.openai.com/v1/",
     options.apiKey,
-    options.fetchImpl
+    options.fetchImpl,
+    options.timeoutMs
   )
   return new OpenAIAdapter(async (window) => {
     const startTime = Math.floor(Date.parse(window.start) / 1000)

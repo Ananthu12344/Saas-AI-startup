@@ -87,3 +87,24 @@ test("normalizes network, HTTP, and JSON failures without exposing secrets", asy
     message: "Provider returned invalid JSON",
   })
 })
+
+test("converts a stalled provider request into a timeout", async () => {
+  const fetcher = createJsonFetcher(
+    "https://api.example.test",
+    "secret",
+    async (_input, init) =>
+      new Promise((_resolve, reject) => {
+        init.signal.addEventListener(
+          "abort",
+          () => reject(new Error("aborted")),
+          {
+            once: true,
+          }
+        )
+      }),
+    5
+  )
+  await assert.rejects(fetcher("usage"), {
+    message: "Provider request timed out",
+  })
+})
