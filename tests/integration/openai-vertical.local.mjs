@@ -3,10 +3,7 @@ import { execFileSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import { OpenAIAdapter } from "../../lib/providers/openai.ts"
-import { createCheckpointStore } from "../../lib/ingestion/checkpoints.ts"
-import { ingestUsagePage } from "../../lib/ingestion/ingest.ts"
-import { syncProviderUsage } from "../../lib/ingestion/sync.ts"
-import { applyPricing, selectPricingVersion } from "../../lib/usage/pricing.ts"
+import { runProviderSync } from "../../lib/ingestion/run.ts"
 import { loadPricingVersions } from "../../lib/usage/pricing-repository.ts"
 
 const env = {
@@ -93,32 +90,20 @@ assert.equal(pricingError, null)
 const pricing = await loadPricingVersions(supabase, "openai", "gpt-4o-mini")
 assert.equal(pricing.length, 1)
 const context = { workspaceId, environment: "development" }
-const checkpointStore = createCheckpointStore(supabase, {
-  workspaceId,
-  providerId: provider.id,
-  credentialId,
-})
-const dependencies = {
-  ...checkpointStore,
-  priceEvent: (event) =>
-    applyPricing(event, selectPricingVersion(pricing, event.occurredAt)),
-  ingestPage: (events, pageContext) =>
-    ingestUsagePage(supabase, "openai", events, pageContext),
-}
 
 try {
-  const first = await syncProviderUsage(
+  const syncOptions = {
+    supabase,
     adapter,
+    provider: "openai",
+    providerId: provider.id,
+    credentialId,
     context,
-    { start: "2026-09-17T00:00:00Z", end: "2026-09-18T00:00:00Z" },
-    dependencies
-  )
-  const replay = await syncProviderUsage(
-    adapter,
-    context,
-    { start: "2026-09-17T00:00:00Z", end: "2026-09-18T00:00:00Z" },
-    dependencies
-  )
+    window: { start: "2026-09-17T00:00:00Z", end: "2026-09-18T00:00:00Z" },
+    pricingByModel: { "gpt-4o-mini": pricing },
+  }
+  const first = await runProviderSync(syncOptions)
+  const replay = await runProviderSync(syncOptions)
   assert.deepEqual(first, {
     pages: 2,
     events: 2,
