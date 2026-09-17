@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
-import { Menu, X, LogOut, ChevronDown, ArrowUpRight } from "lucide-react"
+import { Menu, X, LogOut, ChevronDown, ArrowUpRight, LayoutDashboard } from "lucide-react"
 
 export function HeaderMenu({ email }: { email: string | null }) {
   const [open, setOpen] = useState(false)
@@ -27,6 +27,13 @@ export function HeaderMenu({ email }: { email: string | null }) {
                 <p className="truncate px-3 py-2 text-sm text-muted-foreground">
                   {email}
                 </p>
+                <MenuPrimitive.Item
+                  render={<a href="/dashboard" />}
+                  className="menu-item"
+                >
+                  <LayoutDashboard size={16} />
+                  Dashboard
+                </MenuPrimitive.Item>
                 <MenuPrimitive.Item
                   render={<a href="/logout" />}
                   className="menu-item"
