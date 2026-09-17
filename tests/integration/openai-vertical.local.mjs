@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { createClient } from "@supabase/supabase-js"
 import { OpenAIAdapter } from "../../lib/providers/openai.ts"
+import { createCheckpointStore } from "../../lib/ingestion/checkpoints.ts"
 import { ingestUsagePage } from "../../lib/ingestion/ingest.ts"
 import { syncProviderUsage } from "../../lib/ingestion/sync.ts"
 import { applyPricing, selectPricingVersion } from "../../lib/usage/pricing.ts"
@@ -23,6 +24,7 @@ const supabase = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
 })
 const workspaceId = "10000000-0000-0000-0000-0000000000a1"
 const runId = "openai-vertical-" + randomUUID()
+const credentialId = randomUUID()
 const pricing = {
   providerModelId: "local-openai-model",
   effectiveFrom: "2026-01-01T00:00:00Z",
@@ -58,11 +60,31 @@ const adapter = new OpenAIAdapter(
   async (window) => pages[window.cursor ?? "first"],
   async () => undefined
 )
-const checkpoint = []
+const { data: provider, error: providerError } = await supabase
+  .from("ai_providers")
+  .select("id")
+  .eq("slug", "openai")
+  .single()
+assert.equal(providerError, null)
+const { error: credentialError } = await supabase
+  .from("api_credentials")
+  .insert({
+    id: credentialId,
+    workspace_id: workspaceId,
+    provider_id: provider.id,
+    label: runId,
+    created_by: "00000000-0000-0000-0000-0000000000a1",
+    metadata: { purpose: "local-test" },
+  })
+assert.equal(credentialError, null)
 const context = { workspaceId, environment: "development" }
+const checkpointStore = createCheckpointStore(supabase, {
+  workspaceId,
+  providerId: provider.id,
+  credentialId,
+})
 const dependencies = {
-  loadCheckpoint: async () => checkpoint.at(-1) ?? null,
-  saveCheckpoint: async (value) => checkpoint.push(value),
+  ...checkpointStore,
   priceEvent: (event) =>
     applyPricing(event, selectPricingVersion([pricing], event.occurredAt)),
   ingestPage: (events, pageContext) =>
@@ -122,4 +144,9 @@ try {
     .delete()
     .eq("workspace_id", workspaceId)
     .like("provider_request_id", runId + "%")
+  await supabase
+    .from("ingestion_checkpoints")
+    .delete()
+    .eq("credential_id", credentialId)
+  await supabase.from("api_credentials").delete().eq("id", credentialId)
 }
