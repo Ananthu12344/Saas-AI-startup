@@ -49,6 +49,15 @@ export class OpenAIAdapter implements ProviderAdapter {
   }
 
   normalizeUsage(record: ProviderUsageRecord): NormalizedUsageEvent {
+    const dimensions = [
+      record.metadata?.projectId,
+      record.metadata?.userId,
+      record.metadata?.apiKeyId,
+      record.metadata?.batch,
+    ]
+    const dimensionSuffix = dimensions.some((value) => value !== undefined)
+      ? ":" + dimensions.map((value) => value ?? "").join(":")
+      : ""
     const idempotencyKey = record.providerRequestId
       ? `openai:${record.providerRequestId}`
       : [
@@ -57,7 +66,7 @@ export class OpenAIAdapter implements ProviderAdapter {
           record.occurredAt,
           record.inputTokens ?? 0,
           record.outputTokens ?? 0,
-        ].join(":")
+        ].join(":") + dimensionSuffix
 
     return {
       ...record,

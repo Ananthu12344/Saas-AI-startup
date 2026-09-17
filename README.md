@@ -82,7 +82,9 @@ The MVP telemetry choice is provider usage polling. It keeps onboarding and infr
 
 `lib/ingestion/sync.ts` handles the shared polling mechanics: credential validation, cursor pagination, checkpoint advancement only after a successful page write, and a hard page limit. `lib/ingestion/checkpoints.ts` persists cursors by workspace/provider/credential, while `lib/ingestion/run.ts` composes checkpoints, pricing, and ingestion for a trusted worker.
 
-`lib/providers/http.ts` provides same-origin HTTPS JSON transport without logging keys. `lib/providers/credentials.ts` reads isolated ciphertext only through an injected server-side decryptor, and `lib/providers/validation.ts` rejects malformed normalized pages before ingestion. The OpenAI HTTP response parser remains separate provider work; this boundary intentionally does not guess a provider API contract.
+`lib/providers/http.ts` provides same-origin HTTPS JSON transport without logging keys. `lib/providers/credentials.ts` reads isolated ciphertext only through an injected server-side decryptor, and `lib/providers/validation.ts` rejects malformed normalized pages before ingestion.
+
+The OpenAI completions usage adapter now targets `GET /v1/organization/usage/completions`, requests `group_by=model`, converts Unix-second buckets into normalized events, and rejects missing models, required counts, or unsupported non-zero token dimensions. The endpoint contract is documented in the [OpenAI Usage API reference](https://platform.openai.com/docs/api-reference/usage/completions). It requires an organization-level key with access to the Usage API; the repository still needs a configured decryptor for stored credential ciphertext before live polling can run.
 
 `lib/usage/pricing-repository.ts` loads effective-dated model pricing from Supabase. Historical cost calculation still requires an approved provider pricing catalog and a protected key-management implementation in the worker environment.
 
