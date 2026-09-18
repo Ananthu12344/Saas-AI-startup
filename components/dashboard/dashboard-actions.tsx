@@ -201,11 +201,12 @@ function CredentialManager({ workspaceId, credentials, runtimeReady }: { workspa
     finally { setPending(false) }
   }
 
-  async function sync(credentialId: string) {
+  async function sync(credentialId: string, provider: string) {
     setError(""); setSuccess(""); setSyncing(credentialId)
     const end = new Date(); const start = new Date(end.getTime() - 24 * 60 * 60 * 1000)
     try {
-      await jsonRequest("/api/ingestion/openai", { workspaceId, credentialId, start: start.toISOString(), end: end.toISOString() })
+      const endpoint = provider === "anthropic" ? "/api/ingestion/anthropic" : "/api/ingestion/openai"
+      await jsonRequest(endpoint, { workspaceId, credentialId, start: start.toISOString(), end: end.toISOString() })
       setSuccess("Usage sync completed. Dashboard data will refresh now.")
       router.refresh()
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Usage sync failed") }
@@ -223,7 +224,7 @@ function CredentialManager({ workspaceId, credentials, runtimeReady }: { workspa
         </div>
       ) : null}
       <form className="dashboard-form" onSubmit={submit}>
-        <label>Provider<select name="provider" defaultValue="openai" disabled={pending || !runtimeReady}><option value="openai">OpenAI</option><option value="anthropic">Anthropic (usage sync unavailable)</option></select></label>
+        <label>Provider<select name="provider" defaultValue="openai" disabled={pending || !runtimeReady}><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option></select></label>
         <label>Connection label<input name="label" placeholder="Production OpenAI" required disabled={pending || !runtimeReady} /></label>
         <label>Provider API key<input name="secret" type="password" autoComplete="new-password" placeholder="Enter securely — never shown after saving" required disabled={pending || !runtimeReady} /></label>
         <p className="dashboard-help">Never paste a provider key into a URL. Saving a key does not verify the connection.</p>
@@ -235,7 +236,7 @@ function CredentialManager({ workspaceId, credentials, runtimeReady }: { workspa
   )
 }
 
-function CredentialRows({ credentials, onSync, syncing }: { credentials: Credential[]; onSync?: (id: string) => void; syncing?: string | null }) {
+function CredentialRows({ credentials, onSync, syncing }: { credentials: Credential[]; onSync?: (id: string, provider: string) => void; syncing?: string | null }) {
   if (credentials.length === 0) return <p className="dashboard-empty">No provider connections yet.</p>
   return (
     <ul className="dashboard-list connection-list">
@@ -261,9 +262,9 @@ function CredentialRows({ credentials, onSync, syncing }: { credentials: Credent
             <div><strong>{credential.label}</strong><span>{credential.provider_name}</span></div>
             <strong className={credential.sync_failed ? "connection-state-error" : "connection-state"}>{state}</strong>
             <span>{detail}</span>
-            {credential.provider !== "openai" ? <span>Usage synchronization is not available for this provider.</span> : null}
-            {onSync && credential.status_available && credential.provider === "openai" && credential.secret_saved ? (
-              <button className="outline-button compact-button" type="button" onClick={() => onSync(credential.id)} disabled={syncing === credential.id}>
+            {credential.provider !== "openai" && credential.provider !== "anthropic" ? <span>Usage synchronization is not available for this provider.</span> : null}
+            {onSync && credential.status_available && ["openai", "anthropic"].includes(credential.provider) && credential.secret_saved ? (
+              <button className="outline-button compact-button" type="button" onClick={() => onSync(credential.id, credential.provider)} disabled={syncing === credential.id}>
                 {syncing === credential.id ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
                 {syncing === credential.id ? "Synchronizing…" : "Sync now · Last 24 hours"}
               </button>

@@ -1,6 +1,6 @@
 export type JsonFetch = (
   path: string,
-  query?: Record<string, string | number | undefined>,
+  query?: Record<string, string | number | Array<string> | undefined>,
   signal?: AbortSignal
 ) => Promise<unknown>
 
@@ -15,6 +15,11 @@ export class ProviderTransportError extends Error {
 }
 
 type FetchLike = (input: string | URL, init?: RequestInit) => Promise<Response>
+
+type JsonFetcherOptions = {
+  authHeader?: "authorization" | "x-api-key"
+  extraHeaders?: Record<string, string>
+}
 
 function validateBaseUrl(baseUrl: string) {
   const parsed = new URL(baseUrl)
@@ -33,7 +38,8 @@ export function createJsonFetcher(
   baseUrl: string,
   apiKey: string,
   fetchImpl: FetchLike = fetch,
-  timeoutMs = 15_000
+  timeoutMs = 15_000,
+  options: JsonFetcherOptions = {}
 ): JsonFetch {
   const origin = validateBaseUrl(baseUrl)
   if (!apiKey) throw new Error("Provider API key is required")
@@ -44,8 +50,12 @@ export function createJsonFetcher(
     const url = new URL(path, origin)
     if (url.origin !== origin.origin)
       throw new Error("Provider request escaped the configured origin")
-    for (const [key, value] of Object.entries(query))
-      if (value !== undefined) url.searchParams.set(key, String(value))
+    for (const [key, value] of Object.entries(query)) {
+      if (value === undefined) continue
+      if (Array.isArray(value)) {
+        for (const item of value) url.searchParams.append(key, item)
+      } else url.searchParams.set(key, String(value))
+    }
 
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), timeoutMs)
@@ -59,7 +69,9 @@ export function createJsonFetcher(
         method: "GET",
         headers: {
           Accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          ...(options.extraHeaders ?? {}),
+          [options.authHeader === "x-api-key" ? "x-api-key" : "Authorization"]:
+            options.authHeader === "x-api-key" ? apiKey : `Bearer ${apiKey}`,
         },
         signal: controller.signal,
       })
