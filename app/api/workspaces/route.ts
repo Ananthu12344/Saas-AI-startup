@@ -24,10 +24,24 @@ export async function POST(request: Request) {
   )
     return Response.json({ error: "Name and a valid slug are required" }, { status: 400 })
 
+  // Generate the id client-side so the insert can omit RETURNING. The owner
+  // membership trigger runs after the insert, while a returned row is still
+  // subject to the workspace SELECT policy in the same PostgREST statement.
+  // Reading after the statement lets the trigger establish membership first.
+  const workspaceId = crypto.randomUUID()
+  const { error: insertError } = await client.from("workspaces").insert({
+    id: workspaceId,
+    name: input.name.trim(),
+    slug: input.slug,
+    created_by: userId,
+  })
+  if (insertError)
+    return Response.json({ error: "Unable to create workspace" }, { status: 400 })
+
   const { data: workspace, error } = await client
     .from("workspaces")
-    .insert({ name: input.name.trim(), slug: input.slug, created_by: userId })
     .select("id,name,slug")
+    .eq("id", workspaceId)
     .single()
   if (error || !workspace)
     return Response.json({ error: "Unable to create workspace" }, { status: 400 })
