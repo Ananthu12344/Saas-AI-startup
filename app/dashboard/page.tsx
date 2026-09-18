@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { dashboardSummary } from "@/lib/dashboard/summary"
 import { getDashboardData } from "@/lib/dashboard/queries"
 import { budgetState, budgetStateLabel } from "@/lib/dashboard/budgets"
+import { DashboardActions, WorkspaceSetup } from "@/components/dashboard/dashboard-actions"
 
 const money = (value: number) => `$${value.toFixed(2)}`
 const integer = (value: number) => new Intl.NumberFormat("en-US").format(value)
@@ -110,6 +111,7 @@ export default async function DashboardPage() {
             </p>
             <Link href="/">Return home</Link>
           </section>
+          <WorkspaceSetup />
         </div>
       </main>
     )
@@ -225,6 +227,11 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+        <DashboardActions
+          workspaceId={data.workspace.id}
+          isAdmin={data.workspace.role === "owner" || data.workspace.role === "admin"}
+          credentials={data.credentials}
+        />
         <div className="dashboard-grid">
           <Breakdown title="By provider" rows={data.providers} nameKey="name" />
           <Breakdown title="By model" rows={data.models} nameKey="model" />

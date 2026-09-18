@@ -1,5 +1,6 @@
 import { readAllRows } from "./pagination"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 type Numeric = number | string | null
 
@@ -9,7 +10,16 @@ export type DashboardRow = {
 }
 
 export type DashboardData = {
-  workspace: { id: string; name: string; slug: string }
+  workspace: { id: string; name: string; slug: string; role: string }
+  credentials: Array<{
+    id: string
+    label: string
+    provider: string
+    provider_name: string
+    secret_saved: boolean
+    last_success_at: string | null
+    last_error: string | null
+  }>
   daily: Array<
     DashboardRow & {
       day: string
@@ -160,6 +170,55 @@ export async function getDashboardData(): Promise<DashboardResult> {
   if (!workspace) return { status: "no-workspace" }
 
   const workspaceId = workspace.id as string
+  const { data: membership, error: membershipError } = await supabase
+    .from("workspace_members")
+    .select("role")
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", claims.claims.sub)
+    .maybeSingle()
+  if (membershipError || !membership) throw new Error("Unable to read workspace membership")
+
+  const credentialsPromise = (async () => {
+    const { data: credentials, error } = await supabase
+      .from("api_credentials")
+      .select("id,label,provider_id")
+      .eq("workspace_id", workspaceId)
+      .order("created_at", { ascending: true })
+    if (error) throw new Error("Unable to read credentials")
+    const providerIds = (credentials ?? []).map((item) => item.provider_id)
+    const { data: providers } = providerIds.length
+      ? await supabase.from("ai_providers").select("id,slug,name").in("id", providerIds)
+      : { data: [] as Array<{ id: string; slug: string; name: string }> }
+    const providerById = new Map((providers ?? []).map((provider) => [provider.id, provider]))
+    let secrets: Array<{ credential_id: string }> = []
+    let checkpoints: Array<{ credential_id: string; last_success_at: string | null; last_error: string | null }> = []
+    try {
+      const admin = createAdminClient()
+      const [secretResult, checkpointResult] = await Promise.all([
+        admin.from("api_credential_secrets").select("credential_id").in("credential_id", (credentials ?? []).map((item) => item.id)),
+        admin.from("ingestion_checkpoints").select("credential_id,last_success_at,last_error").eq("workspace_id", workspaceId),
+      ])
+      if (!secretResult.error) secrets = secretResult.data ?? []
+      if (!checkpointResult.error) checkpoints = checkpointResult.data ?? []
+    } catch {
+      // Configuration status is unavailable when the protected admin client is not configured.
+    }
+    const secretIds = new Set(secrets.map((secret) => secret.credential_id))
+    const checkpointByCredential = new Map(checkpoints.map((checkpoint) => [checkpoint.credential_id, checkpoint]))
+    return (credentials ?? []).map((credential) => {
+      const provider = providerById.get(credential.provider_id)
+      const checkpoint = checkpointByCredential.get(credential.id)
+      return {
+        id: credential.id,
+        label: credential.label,
+        provider: provider?.slug ?? "unknown",
+        provider_name: provider?.name ?? "Unknown provider",
+        secret_saved: secretIds.has(credential.id),
+        last_success_at: checkpoint?.last_success_at ?? null,
+        last_error: checkpoint?.last_error ?? null,
+      }
+    })
+  })()
   const [
     daily,
     providers,
@@ -169,6 +228,7 @@ export async function getDashboardData(): Promise<DashboardResult> {
     budgets,
     waste,
     anomalies,
+    credentials,
   ] = await Promise.all([
     readView(supabase, "usage_daily", workspaceId, [
       "input_tokens",
@@ -218,6 +278,7 @@ export async function getDashboardData(): Promise<DashboardResult> {
       "mean_cost",
       "stddev_cost",
     ]),
+    credentialsPromise,
   ])
 
   // Existing views cannot separate currencies or missing prices. Withhold the
@@ -244,7 +305,8 @@ export async function getDashboardData(): Promise<DashboardResult> {
   return {
     status: "ready",
     data: {
-      workspace: workspace as DashboardData["workspace"],
+      workspace: { ...(workspace as Omit<DashboardData["workspace"], "role">), role: membership.role },
+      credentials,
       daily: daily as DashboardData["daily"],
       providers: providers as DashboardData["providers"],
       models: models as DashboardData["models"],
