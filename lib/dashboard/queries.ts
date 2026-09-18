@@ -28,6 +28,8 @@ export type DashboardData = {
     acknowledged_at: string | null
     created_at: string
   }>
+  workspace_projects: Array<{ id: string; name: string; slug: string }>
+  workspace_applications: Array<{ id: string; name: string; slug: string; environment: string; project_id: string }>
   daily: Array<
     DashboardRow & {
       day: string
@@ -237,6 +239,24 @@ export async function getDashboardData(): Promise<DashboardResult> {
       if (error) throw new Error("Unable to read alerts")
       return (data ?? []) as DashboardData["alerts"]
     })
+  const projectsPromise = supabase
+    .from("projects")
+    .select("id,name,slug")
+    .eq("workspace_id", workspaceId)
+    .order("name", { ascending: true })
+    .then(({ data, error }) => {
+      if (error) throw new Error("Unable to read projects")
+      return (data ?? []) as DashboardData["workspace_projects"]
+    })
+  const applicationsPromise = supabase
+    .from("applications")
+    .select("id,name,slug,environment,project_id")
+    .eq("workspace_id", workspaceId)
+    .order("name", { ascending: true })
+    .then(({ data, error }) => {
+      if (error) throw new Error("Unable to read applications")
+      return (data ?? []) as DashboardData["workspace_applications"]
+    })
   const [
     daily,
     providers,
@@ -248,6 +268,8 @@ export async function getDashboardData(): Promise<DashboardResult> {
     anomalies,
     credentials,
     alerts,
+    workspaceProjects,
+    workspaceApplications,
   ] = await Promise.all([
     readView(supabase, "usage_daily", workspaceId, [
       "input_tokens",
@@ -299,6 +321,8 @@ export async function getDashboardData(): Promise<DashboardResult> {
     ]),
     credentialsPromise,
     alertsPromise,
+    projectsPromise,
+    applicationsPromise,
   ])
 
   // Existing views cannot separate currencies or missing prices. Withhold the
@@ -328,6 +352,8 @@ export async function getDashboardData(): Promise<DashboardResult> {
       workspace: { ...(workspace as Omit<DashboardData["workspace"], "role">), role: membership.role },
       credentials,
       alerts,
+      workspace_projects: workspaceProjects,
+      workspace_applications: workspaceApplications,
       daily: daily as DashboardData["daily"],
       providers: providers as DashboardData["providers"],
       models: models as DashboardData["models"],

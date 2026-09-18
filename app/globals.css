@@ -1117,6 +1117,7 @@ a {
 .dashboard-form input:disabled, .dashboard-form select:disabled { opacity: .6; }
 .dashboard-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dashboard-help, .dashboard-kicker { color: var(--subtle); font-size: 13px; line-height: 1.6; }
+.dashboard-form-heading { color: var(--ink); font-size: 14px; }
 .dashboard-kicker { display: block; color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
 .dashboard-form-error, .dashboard-form-success { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; line-height: 1.5; }
 .dashboard-form-error { color: #a33f3f; }

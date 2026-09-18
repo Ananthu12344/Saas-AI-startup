@@ -231,6 +231,7 @@ export default async function DashboardPage() {
           workspaceId={data.workspace.id}
           isAdmin={data.workspace.role === "owner" || data.workspace.role === "admin"}
           credentials={data.credentials}
+          projects={data.workspace_projects}
         />
         <div className="dashboard-grid">
           <Breakdown title="By provider" rows={data.providers} nameKey="name" />
