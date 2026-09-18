@@ -188,13 +188,14 @@ function CredentialManager({ workspaceId, credentials, runtimeReady }: { workspa
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setSuccess(""); setPending(true)
-    const form = new FormData(event.currentTarget)
+    const formElement = event.currentTarget
+    const form = new FormData(formElement)
     try {
       const result = await jsonRequest("/api/credentials", { workspaceId, provider: form.get("provider"), label: form.get("label") }) as { credential?: { id: string } }
       if (!result.credential?.id) throw new Error("Credential metadata was not returned")
       await jsonRequest(`/api/credentials/${result.credential.id}/secret`, { secret: form.get("secret") })
       setSuccess("Credential saved. Verify it with a usage sync when ready.")
-      event.currentTarget.reset()
+      formElement.reset()
       router.refresh()
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save credential") }
     finally { setPending(false) }
@@ -284,7 +285,8 @@ function BudgetManager({ workspaceId }: { workspaceId: string }) {
     setError("")
     setSuccess("")
     setPending(true)
-    const form = new FormData(event.currentTarget)
+    const formElement = event.currentTarget
+    const form = new FormData(formElement)
     try {
       await jsonRequest("/api/budgets", {
         workspaceId,
@@ -295,7 +297,7 @@ function BudgetManager({ workspaceId }: { workspaceId: string }) {
         alertThreshold: Number(form.get("alertThreshold")) / 100,
       })
       setSuccess("Budget created and added to the dashboard.")
-      event.currentTarget.reset()
+      formElement.reset()
       router.refresh()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to create budget")
@@ -321,8 +323,8 @@ function BudgetManager({ workspaceId }: { workspaceId: string }) {
 
 function CatalogManager({ workspaceId, projects, applications }: { workspaceId: string; projects: Project[]; applications: Application[] }) {
   const router = useRouter(); const [pending, setPending] = useState(false); const [error, setError] = useState(""); const [success, setSuccess] = useState("")
-  async function submitProject(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(""); setSuccess(""); setPending(true); const form = new FormData(event.currentTarget); try { await jsonRequest("/api/projects", { workspaceId, name: form.get("projectName"), slug: form.get("projectSlug") }); setSuccess("Project created."); event.currentTarget.reset(); router.refresh() } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create project") } finally { setPending(false) } }
-  async function submitApplication(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(""); setSuccess(""); setPending(true); const form = new FormData(event.currentTarget); try { await jsonRequest("/api/applications", { workspaceId, projectId: form.get("projectId"), name: form.get("applicationName"), slug: form.get("applicationSlug"), environment: form.get("environment") }); setSuccess("Application created."); event.currentTarget.reset(); router.refresh() } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create application") } finally { setPending(false) } }
+  async function submitProject(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(""); setSuccess(""); setPending(true); const formElement = event.currentTarget; const form = new FormData(formElement); try { await jsonRequest("/api/projects", { workspaceId, name: form.get("projectName"), slug: form.get("projectSlug") }); setSuccess("Project created."); formElement.reset(); router.refresh() } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create project") } finally { setPending(false) } }
+  async function submitApplication(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setError(""); setSuccess(""); setPending(true); const formElement = event.currentTarget; const form = new FormData(formElement); try { await jsonRequest("/api/applications", { workspaceId, projectId: form.get("projectId"), name: form.get("applicationName"), slug: form.get("applicationSlug"), environment: form.get("environment") }); setSuccess("Application created."); formElement.reset(); router.refresh() } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to create application") } finally { setPending(false) } }
   return (
     <section id="projects" className="dashboard-panel catalog-panel" aria-labelledby="catalog-title">
       <div className="dashboard-panel-heading"><h2 id="catalog-title">Projects and applications</h2><span>All members</span></div>
