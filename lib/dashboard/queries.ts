@@ -20,6 +20,14 @@ export type DashboardData = {
     last_success_at: string | null
     last_error: string | null
   }>
+  alerts: Array<{
+    id: string
+    kind: string
+    severity: string
+    message: string
+    acknowledged_at: string | null
+    created_at: string
+  }>
   daily: Array<
     DashboardRow & {
       day: string
@@ -219,6 +227,16 @@ export async function getDashboardData(): Promise<DashboardResult> {
       }
     })
   })()
+  const alertsPromise = supabase
+    .from("alerts")
+    .select("id,kind,severity,message,acknowledged_at,created_at")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .limit(100)
+    .then(({ data, error }) => {
+      if (error) throw new Error("Unable to read alerts")
+      return (data ?? []) as DashboardData["alerts"]
+    })
   const [
     daily,
     providers,
@@ -229,6 +247,7 @@ export async function getDashboardData(): Promise<DashboardResult> {
     waste,
     anomalies,
     credentials,
+    alerts,
   ] = await Promise.all([
     readView(supabase, "usage_daily", workspaceId, [
       "input_tokens",
@@ -279,6 +298,7 @@ export async function getDashboardData(): Promise<DashboardResult> {
       "stddev_cost",
     ]),
     credentialsPromise,
+    alertsPromise,
   ])
 
   // Existing views cannot separate currencies or missing prices. Withhold the
@@ -307,6 +327,7 @@ export async function getDashboardData(): Promise<DashboardResult> {
     data: {
       workspace: { ...(workspace as Omit<DashboardData["workspace"], "role">), role: membership.role },
       credentials,
+      alerts,
       daily: daily as DashboardData["daily"],
       providers: providers as DashboardData["providers"],
       models: models as DashboardData["models"],

@@ -360,6 +360,29 @@ export default async function DashboardPage() {
               </ul>
             )}
           </div>
+          <div className="dashboard-panel">
+            <div className="dashboard-panel-heading">
+              <h2>Alerts</h2>
+              <span>{data.alerts.length}</span>
+            </div>
+            <p className="dashboard-empty">
+              Budget, anomaly, and potential inefficiency alerts for this workspace.
+            </p>
+            {data.alerts.length === 0 ? (
+              <p className="dashboard-empty">No alerts yet.</p>
+            ) : (
+              <ul className="dashboard-list">
+                {data.alerts.slice(0, 5).map((alert) => (
+                  <li key={alert.id}>
+                    <div>
+                      <strong>{alert.severity} · {alert.kind}</strong>
+                      <span>{alert.message}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
       </div>
     </main>
