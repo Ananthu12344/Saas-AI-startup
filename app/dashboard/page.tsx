@@ -14,6 +14,16 @@ const day = (value: string) =>
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${value}T00:00:00Z`))
+const dateTime = (value: string) =>
+  new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(new Date(value))
 
 function Metric({
   label,
@@ -106,8 +116,9 @@ export default async function DashboardPage() {
           >
             <h1 id="no-workspace-title">No workspace yet</h1>
             <p>
-              You’re signed in, but you don’t belong to a workspace yet. Ask
-              your workspace owner to add you.
+              You’re signed in, but you don’t belong to a workspace yet. Create
+              one to start collecting usage, or ask a workspace owner to add
+              you to an existing workspace.
             </p>
             <Link href="/">Return home</Link>
           </section>
@@ -145,46 +156,61 @@ export default async function DashboardPage() {
   const activeBudget = summary.workspaceBudget
   const budgetRatio =
     activeBudget && activeBudget.amount > 0 ? activeBudget.consumed_ratio : null
+  const lastSuccessfulSync = data.credentials
+    .map((credential) => credential.last_success_at)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1) ?? null
+  const hasUsage = data.daily.length > 0
+  const dataAvailable = hasUsage || lastSuccessfulSync !== null
 
   return (
     <main className="dashboard-page">
       <div className="page-width dashboard-shell">
         <header className="dashboard-header">
           <div>
-            <Link href="/" className="dashboard-back">
-              ← TokenLens
-            </Link>
-            <p className="eyebrow">Workspace observatory</p>
-            <h1>{data.workspace.name}</h1>
+            <Link href="/" className="dashboard-brand">TokenLens</Link>
+            <p className="dashboard-tagline">See your AI usage. Understand your spend.</p>
+            <nav className="dashboard-nav" aria-label="Workspace observatory sections">
+              <a href="#overview">Overview</a>
+              <a href="#connections">Connections</a>
+              <a href="#projects">Projects &amp; applications</a>
+              <a href="#budgets">Budgets</a>
+              <a href="#alerts">Alerts</a>
+            </nav>
+            <p className="dashboard-workspace-meta">{data.workspace.name} / {data.workspace.role}</p>
+            <h1>Overview</h1>
             <p className="dashboard-subtitle">
-              USD usage costs may include estimates. Summary periods use UTC;
-              breakdowns cover all recorded usage events. Event counts are
-              normalized ingestion records and may represent provider buckets.
+              Recorded usage, with the context to understand it. USD costs may
+              include estimates and summary periods use UTC.
             </p>
           </div>
           <a href="/logout" className="dashboard-logout">
             Log out
           </a>
         </header>
-        <section className="dashboard-metrics" aria-label="Summary metrics">
+        <section id="overview" className="dashboard-metrics" aria-label="Summary metrics">
           <Metric
             label="Spend this month"
-            value={money(summary.monthCost)}
+            value={dataAvailable ? money(summary.monthCost) : "—"}
             detail={
-              summary.latestMonthDay
+              !dataAvailable
+                ? "Usage is not available yet"
+                : summary.latestMonthDay
                 ? `Through ${day(summary.latestMonthDay)} (UTC)`
-                : "No usage this month"
+                : "Successful sync returned no usage"
             }
           />
-          <Metric label="Spend today" value={money(summary.todayCost)} />
+          <Metric label="Spend today" value={dataAvailable ? money(summary.todayCost) : "—"} detail={dataAvailable ? "Current UTC day" : "Usage is not available yet"} />
           <Metric
             label="Tokens this month"
-            value={integer(summary.monthTokens)}
+            value={dataAvailable ? integer(summary.monthTokens) : "—"}
+            detail={dataAvailable ? "Input + output tokens" : "Usage is not available yet"}
           />
           <Metric
             label="Budget used"
             value={
-              budgetRatio === null ? "—" : `${(budgetRatio * 100).toFixed(0)}%`
+              !dataAvailable || budgetRatio === null ? "—" : `${(budgetRatio * 100).toFixed(0)}%`
             }
             detail={
               activeBudget
@@ -195,6 +221,12 @@ export default async function DashboardPage() {
             }
           />
         </section>
+        <div className={`dashboard-freshness ${lastSuccessfulSync ? "is-fresh" : ""}`} role="status">
+          <strong>Data freshness</strong>
+          {lastSuccessfulSync
+            ? <span>Last successful sync · {dateTime(lastSuccessfulSync)} · Provider reporting may be delayed.</span>
+            : <span>No successful synchronization recorded yet. Usage data is unavailable unless records were ingested another way.</span>}
+        </div>
         <section className="dashboard-panel">
           <div className="dashboard-panel-heading">
             <h2>Usage over time</h2>
@@ -232,8 +264,11 @@ export default async function DashboardPage() {
           isAdmin={data.workspace.role === "owner" || data.workspace.role === "admin"}
           credentials={data.credentials}
           projects={data.workspace_projects}
+          applications={data.workspace_applications}
+          hasUsage={hasUsage}
+          runtimeReady={data.credential_runtime_ready}
         />
-        <div className="dashboard-grid">
+        <div id="attribution" className="dashboard-grid">
           <Breakdown title="By provider" rows={data.providers} nameKey="name" />
           <Breakdown title="By model" rows={data.models} nameKey="model" />
           <Breakdown
@@ -247,8 +282,8 @@ export default async function DashboardPage() {
             nameKey="application"
           />
         </div>
-        <section className="dashboard-grid dashboard-grid-bottom">
-          <div className="dashboard-panel">
+        <section id="alerts" className="dashboard-grid dashboard-grid-bottom">
+          <div id="budgets" className="dashboard-panel">
             <div className="dashboard-panel-heading">
               <h2>Budget consumption</h2>
               <span>{summary.activeBudgets.length}</span>
@@ -367,7 +402,7 @@ export default async function DashboardPage() {
               <span>{data.alerts.length}</span>
             </div>
             <p className="dashboard-empty">
-              Budget, anomaly, and potential inefficiency alerts for this workspace.
+              Existing workspace alert records. This does not imply email or push notifications.
             </p>
             {data.alerts.length === 0 ? (
               <p className="dashboard-empty">No alerts yet.</p>

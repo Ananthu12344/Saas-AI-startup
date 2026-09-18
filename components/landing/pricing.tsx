@@ -33,7 +33,7 @@ const plans = [
     name: "Enterprise",
     price: "Let’s talk",
     period: "",
-    description: "A clearer way to govern team usage.",
+    description: "A clearer way to understand team usage.",
     features: [
       "Everything in Pro",
       "Workspace membership controls",

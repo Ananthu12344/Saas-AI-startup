@@ -11,6 +11,7 @@ export type DashboardRow = {
 
 export type DashboardData = {
   workspace: { id: string; name: string; slug: string; role: string }
+  credential_runtime_ready: boolean
   credentials: Array<{
     id: string
     label: string
@@ -18,7 +19,8 @@ export type DashboardData = {
     provider_name: string
     secret_saved: boolean
     last_success_at: string | null
-    last_error: string | null
+    sync_failed: boolean
+    status_available: boolean
   }>
   alerts: Array<{
     id: string
@@ -202,14 +204,18 @@ export async function getDashboardData(): Promise<DashboardResult> {
     const providerById = new Map((providers ?? []).map((provider) => [provider.id, provider]))
     let secrets: Array<{ credential_id: string }> = []
     let checkpoints: Array<{ credential_id: string; last_success_at: string | null; last_error: string | null }> = []
+    let statusAvailable = false
     try {
       const admin = createAdminClient()
       const [secretResult, checkpointResult] = await Promise.all([
         admin.from("api_credential_secrets").select("credential_id").in("credential_id", (credentials ?? []).map((item) => item.id)),
         admin.from("ingestion_checkpoints").select("credential_id,last_success_at,last_error").eq("workspace_id", workspaceId),
       ])
-      if (!secretResult.error) secrets = secretResult.data ?? []
-      if (!checkpointResult.error) checkpoints = checkpointResult.data ?? []
+      if (!secretResult.error && !checkpointResult.error) {
+        secrets = secretResult.data ?? []
+        checkpoints = checkpointResult.data ?? []
+        statusAvailable = true
+      }
     } catch {
       // Configuration status is unavailable when the protected admin client is not configured.
     }
@@ -225,7 +231,8 @@ export async function getDashboardData(): Promise<DashboardResult> {
         provider_name: provider?.name ?? "Unknown provider",
         secret_saved: secretIds.has(credential.id),
         last_success_at: checkpoint?.last_success_at ?? null,
-        last_error: checkpoint?.last_error ?? null,
+        sync_failed: Boolean(checkpoint?.last_error),
+        status_available: statusAvailable,
       }
     })
   })()
@@ -350,6 +357,11 @@ export async function getDashboardData(): Promise<DashboardResult> {
     status: "ready",
     data: {
       workspace: { ...(workspace as Omit<DashboardData["workspace"], "role">), role: membership.role },
+      credential_runtime_ready: Boolean(
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          process.env.CLARITY_CREDENTIAL_MASTER_KEY &&
+          process.env.CLARITY_CREDENTIAL_KEY_VERSION
+      ),
       credentials,
       alerts,
       workspace_projects: workspaceProjects,

@@ -21,9 +21,9 @@ const features = [
   },
   {
     icon: Boxes,
-    title: "Attribute every project",
+    title: "Understand project spend",
     description:
-      "Connect usage to projects and applications so teams can see where spend comes from.",
+      "Review usage by project and application so teams can see where recorded spend comes from.",
   },
   {
     icon: Gauge,
